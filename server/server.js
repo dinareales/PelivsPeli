@@ -1,7 +1,7 @@
 var express = require('express');
 var bodyParser = require('body-parser');
 var cors = require('cors');
-var controller = require('./controladores/controlador');
+var controlador = require('./controladores/competenciasController');
 
 var app = express();
 
@@ -12,7 +12,8 @@ app.use(bodyParser.urlencoded({
 }));
 
 app.use(bodyParser.json());
-
+app.get('/competencias/:id', controlador.obtenerCompetencia);
+app.get('/competencias', controlador.cargarCompetencia);
 //seteamos el puerto en el cual va a escuchar los pedidos la aplicación
 var puerto = '8080';
 
