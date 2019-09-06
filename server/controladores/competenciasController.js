@@ -1,10 +1,10 @@
-var conexion = require('../lib/conexionbd');
+var conexionBaseDeDatos = require('../lib/conexionbd');
 
 function obtenerCompetencia(req, res) {
   var id = req.params.id;
-  var sql = 'SELECT * FROM competencia WHERE id = ?';
+  var peticionSql = 'SELECT * FROM competencia WHERE id = ?';
   
-  conexion.query(sql, [id], function(error, resultado, campos) {
+  conexionBaseDeDatos.query(peticionSql, [id], function(error, resultado, campos) {
     if(error) {
       console.log('Hubo un error en la consulta', error.message);
       return res.status(500).send('Hubo un error en la consulta');
@@ -19,11 +19,11 @@ function obtenerCompetencia(req, res) {
 }
 
 
-// Listamos las competencias creadas
+// Cargamos las competencias
 function cargarCompetencia(req, res) {
-  var sql = 'SELECT * FROM competencia';
+  var peticionSql = 'SELECT * FROM competencia';
   
-  conexion.query(sql, function(error, resultado, campos) {
+  conexionBaseDeDatos.query(peticionSql, function(error, resultado, campos) {
     if(error) {
       console.log('No se encuentra ninguna competencia en el servidor.', error.message);
       return res.status(500).send('No se encuentra ninguna competencia en el servidor.');
