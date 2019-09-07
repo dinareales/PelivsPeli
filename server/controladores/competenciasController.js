@@ -150,8 +150,8 @@ function obtenerResultados(req, res) {
     };
     // Si la competencia no ha recibido votos devolvemos el mensaje correspondiente
     if(!resultado || resultado.length == 0) {
-      console.log('Esta competencia todavia no ha recibido votos.');
-      return res.status(422).send('Esta competencia todavia no ha recibido votos');
+      console.log('Esta competencia aun no ha recibido votos.');
+      return res.status(422).send('Esta competencia aun no ha recibido votos');
     } else {
       var respuesta = {
         competencia: resultado[0].nombre,
@@ -162,6 +162,127 @@ function obtenerResultados(req, res) {
   })
 };
 
+//cargamos la lista de generos
+function cargarGeneros(req, res) {
+  var peticionsql = 'SELECT * FROM genero';
+  
+  conexionBaseDeDatos.query(peticionsql, function(error, resultado, campos) {
+    if(error) {
+      console.log('Hubo un error en la consulta', error.message);
+      return res.status(500).send('Hubo un error en la consulta');
+    };
+    res.status(200).send(JSON.stringify(resultado));
+  })
+};
+
+// Cargamos la lista de los directores
+function cargarDirectores(req, res) {
+  var  peticionsql = 'SELECT * FROM director';
+  
+  conexionBaseDeDatos.query( peticionsql, function(error, resultado, campos) {
+    if(error) {
+      console.log('Hubo un error en la consulta', error.message);
+      return res.status(500).send('Hubo un error en la consulta');
+    };
+    res.status(200).send(JSON.stringify(resultado));
+  })
+};
+
+// cargamos la lista de los actor/actriz 
+function cargarActores(req, res) {
+  var  peticionsql = 'SELECT * FROM actor';
+  
+  conexionBaseDeDatos.query(peticionsql, function(error, resultado, campos) {
+    if(error) {
+      console.log('Hubo un error en la consulta', error.message);
+      return res.status(500).send('Hubo un error en la consulta');
+    };
+    res.status(200).send(JSON.stringify(resultado));
+  })
+};
+
+// Creamos la competencia con los parametros seleccionados
+function crearCompetencia(req, res) {
+  var nombre = req.body.nombre === '' ? null : req.body.nombre;
+  var genero_id = req.body.genero;
+  var director_id = req.body.director;
+  var actor_id = req.body.actor;
+
+  // Buscamos si existe una competencia con el mismo nombre
+  var busquedaSql = 'SELECT * FROM competencia WHERE nombre = ?'
+  conexionBaseDeDatos.query(busquedaSql, [nombre], function(error, resultado, campos) {
+    if(resultado && resultado.length !== 0) {
+      console.log('La competencia ya existe');
+      return res.status(422).send('La competencia ya existe');
+    } else {
+      // Verificamos que la cantidad de peliculas que coinciden con los parametros seleccionados
+      // sea suficiente para crear la competencia
+      var sqlBuscarPeli = sqlBuscarPeliculas(genero_id, director_id, actor_id);
+      conexionBaseDeDatos.query(sqlBuscarPeli, [nombre], function(error, resultado, campos) {
+        if(resultado && resultado.length < 2) {
+          console.log('La cantidad de resultados obtenidos no es suficiente para crear una competencia');
+          return res.status(422).send('La cantidad de resultados obtenidos no es suficiente para crear una competencia');
+        } else {
+          var peticionSql = 'INSERT INTO competencia (nombre, genero_id, director_id, actor_id) VALUES (?, ?, ?, ?)';
+          conexionBaseDeDatos.query(peticionSql, [nombre, genero_id, director_id, actor_id], function(error, resultado, campos) {
+            if(error) {
+              console.log('El campo NOMBRE no puede estar en blanco', error.message);
+              return res.status(422).send('El campo NOMBRE no puede estar en blanco');
+            }
+            console.log('Competencia agregada.');
+            return res.status(200).send('La competencia se ha creado con exito!');
+          })
+        };
+      })  
+    }
+  })
+};
+
+// Eliminamos los votos de la competencia seleccionada
+function eliminarVotos(req, res) {
+  var idCompetencia = req.params.id;
+  var peticionSql = 'DELETE FROM voto WHERE id_competencia = ?';
+  conexionBaseDeDatos.query(peticionSql, [idCompetencia], function(error, resultado, campos) {
+    if(error) {
+      console.log('No se encuentra la competencia. No se borraron votos.', error.message);
+      return res.status(500).send('No se encuentra la competencia. No se borraron votos.');
+    };
+    console.log('votos eliminados!');
+    return res.status(200).send(resultado.affectedRows + ' votos eliminados!');
+  })
+};
+
+function eliminarCompetencia(req, res) {
+  var idCompetencia = req.params.id;
+  var peticionSql = 'DELETE FROM competencia WHERE id = ?';
+  conexionBaseDeDatos.query(peticionSql, [idCompetencia], function(error, resultado, campos) {
+    if(error) {
+      console.log('No se encuentra la competencia. Nada para eliminar.', error.message);
+      return res.status(404).send('No se encuentra la competencia. Nada para eliminar.');
+    };
+    eliminarVotos(req, res);
+    console.log('Se eliminó ' + resultado.affectedRows + ' competencia con id ' + idCompetencia);
+  })
+};
+
+// Editamos el nombre de la competencia seleccionada
+function editarCompetencia(req, res) {
+  var idCompetencia = req.params.id;
+  var nuevoNombre = req.body.nombre === '' ? null : req.body.nombre;
+  var peticionSql = 'UPDATE competencia SET nombre = ? WHERE id = ?';
+  conexionBaseDeDatos.query(peticionSql, [nuevoNombre, idCompetencia], function(error, resultado, campos) {
+    if(error) {
+      console.log('El campo NOMBRE no puede estar en blanco', error.message);
+      return res.status(422).send('El campo NOMBRE no puede estar en blanco');
+    }
+    if(!idCompetencia) {
+      console.log('La competencia no existe');
+      return res.status(404).send('La competencia no existe');
+    }
+    console.log('Se actualizó el nombre de la competencia Nº ' + idCompetencia + ' por ' + nuevoNombre);
+    res.status(200).send('Se actualizó el nombre de la competencia por ' + nuevoNombre);
+  })
+};
 /**
  funcion que permite leer  el contenido de una archivo
   @archivo :: nombre del archivo
@@ -183,4 +304,11 @@ module.exports = {
   obtenerOpciones : obtenerOpciones,
   votar : votar,
   obtenerResultados: obtenerResultados,
+  cargarGeneros : cargarGeneros,
+  cargarDirectores : cargarDirectores,
+  cargarActores : cargarActores,
+  crearCompetencia : crearCompetencia,
+  eliminarVotos : eliminarVotos,
+  eliminarCompetencia : eliminarCompetencia,
+  editarCompetencia : editarCompetencia,
 };
