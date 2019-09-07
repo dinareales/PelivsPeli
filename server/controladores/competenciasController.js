@@ -14,7 +14,6 @@ function obtenerCompetencia(req, res) {
       console.log('La competencia no existe.');
       return res.status(404).send('La competencia no existe.');
     };
-    console.log(resultado[0])
     res.send(JSON.stringify(resultado[0]));
   })
 }
@@ -113,7 +112,6 @@ function obtenerOpciones(req, res){
 function votar(req, res) {
   var idCompetencia = req.params.id;
   var idPelicula = req.body.idPelicula;
-  console.log(req.body);
   var peticionSql = 'INSERT INTO voto (id_competencia, id_pelicula) VALUES (' + idCompetencia + ', ' + idPelicula + ')';
   conexionBaseDeDatos.query(peticionSql, function(error, resultado, campos) {
     if(error) {

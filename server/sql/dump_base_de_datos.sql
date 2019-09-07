@@ -102,9 +102,9 @@ DROP TABLE IF EXISTS `competencia`;
 CREATE TABLE `competencia` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `nombre` varchar(100) NOT NULL,
-  `genero_id` int(11) unsigned,
-  `director_id` int(11) unsigned,
-  `actor_id` int(11) unsigned,
+  `genero_id` int(11) unsigned NOT NULL,
+  `director_id` int(11) unsigned NOT NULL,
+  `actor_id` int(11) unsigned NOT NULL,
   PRIMARY KEY (`id`)
 );
 
